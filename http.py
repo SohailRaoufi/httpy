@@ -1,7 +1,8 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, gethostname
 import sys
 import signal
-
+import mimetypes
+import os
 
 server = socket(AF_INET, SOCK_STREAM, -1)
 
@@ -18,22 +19,65 @@ def close_and_cleanup(sig, frame):
     sys.exit(0)
 
 
+def get_status_text(status):
+    if status == 200:
+        return 'OK'
+    if status == 201:
+        return 'CREATED'
+    if status == 203:
+        return 'NO CONTENT'
+    if status == 400:
+        return ''
+    if status == 404:
+        return 'NOT FOUND'
+    else:
+        return 'Internal Server Error'
+
+
+def response(content, content_type, status):
+    status_text = get_status_text(status)
+    content_length = len(content)
+
+    res = f"""HTTP/1.1 {status} {status_text}
+Content-Type: {content_type}
+Content-Length: {content_length}
+
+{content}
+     """.encode()
+
+    return res
+
+
+def get_file(socket: socket):
+    try:
+        req = socket.recv(1024).decode().splitlines()
+        data = req[0].split()
+        data_path = data[1][1:]
+
+        if not os.path.isfile(data_path):
+            return response('404 Not Found!', 'text/plain', 404)
+
+        with open(data_path, 'r') as file:
+            content = file.read()
+
+        content_type = mimetypes.guess_type(data_path)
+
+        return response(content, content_type[0], 200)
+    except Exception:
+        return response('500 Internal Pointer Variable!', 'text/plain', 500)
+
+
 signal.signal(signal.SIGINT, close_and_cleanup)
 
 server.listen()
 while 1:
     try:
         (clientSocket, clientAddress) = server.accept()
-        print(clientAddress)
-        msg = clientSocket.recv(2024).decode()
-        clientSocket.send("""HTTP/1.1 200 OK
-Content-Type: text/html
-Content-Length: 30
-
-<html><body>Hello World</body></html>
-""".encode())
+        res = get_file(clientSocket)
+        clientSocket.send(res)
         clientSocket.close()
-    except OSError:
-        break
+    except OSError as e:
+        print(e)
+
 
 server.close()
