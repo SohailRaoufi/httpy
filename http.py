@@ -27,7 +27,7 @@ def get_status_text(status):
     if status == 203:
         return 'NO CONTENT'
     if status == 400:
-        return ''
+        return 'BAD REQUEST'
     if status == 404:
         return 'NOT FOUND'
     else:
