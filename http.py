@@ -31,31 +31,43 @@ def get_status_text(status):
     if status == 404:
         return 'NOT FOUND'
     else:
-        return 'Internal Server Error'
+        return 'Internal Pointer Variable Error'
 
 
 def response(content, content_type, status):
     status_text = get_status_text(status)
     content_length = len(content)
+    http_status = f"HTTP/1.1 {status} {status_text}"
 
-    res = f"""HTTP/1.1 {status} {status_text}
-Content-Type: {content_type}
-Content-Length: {content_length}
+    headers = {
+        "Content-Type": content_type,
+        "Content-Length": content_length
+    }
 
-{content}
-     """.encode()
+    res = [http_status]
+    for key, item in headers.items():
+        res.append(f"{key}: {item}")
+    res.append("")
 
-    return res
+    header_str = "\n".join(res) + "\n"
+    return header_str.encode() + content.encode()
+
+
+def resolve_path(data):
+    path = os.path.abspath(data)
+
+    if os.path.exists(path) and os.path.isfile(path):
+        return path
+    return None
 
 
 def get_file(socket: socket):
     try:
         req = socket.recv(1024).decode().splitlines()
         data = req[0].split()
-        data_path = data[1][1:]
-
-        if not os.path.isfile(data_path):
-            return response('404 Not Found!', 'text/plain', 404)
+        data_path = resolve_path(data[1])
+        if data_path is None:
+            return response("404 Not Found", "text/plain", 400)
 
         with open(data_path, 'r') as file:
             content = file.read()
@@ -63,12 +75,12 @@ def get_file(socket: socket):
         content_type = mimetypes.guess_type(data_path)
 
         return response(content, content_type[0], 200)
-    except Exception:
+    except Exception as e:
+        print(e)
         return response('500 Internal Pointer Variable!', 'text/plain', 500)
 
 
 signal.signal(signal.SIGINT, close_and_cleanup)
-
 server.listen()
 while 1:
     try:
@@ -78,6 +90,7 @@ while 1:
         clientSocket.close()
     except OSError as e:
         print(e)
+        break
 
 
 server.close()
