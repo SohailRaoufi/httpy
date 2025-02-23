@@ -1,14 +1,35 @@
-from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, gethostname
+from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 import sys
 import signal
 import mimetypes
 import os
 from name import http_name
+import argparse
+
+"""
+-------------------- Command Line Arguments Parser ---------------------
+"""
+
+parser = argparse.ArgumentParser(prog="Httpy", usage="%(prog)s [OPTIONS]")
+parser.add_argument("--host",default="localhost", help="determine the host of server. [default: localhost]")
+parser.add_argument("--p", "--port", default=8001, type=int , help="determine the porst of the server. [default: 8001]")
+parser.add_argument("-V", "--version", action="version", version="%(prog)s 0.1.0")
+args = parser.parse_args()
+
+
+"""
+----------- Command Line Arguments -----------
+"""
+
+host = args.host
+port = args.p
+
+
 server = socket(AF_INET, SOCK_STREAM, -1)
 
 server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-server.bind((gethostname(), 8001))
+server.bind((host, port))
 
 print(http_name)
 print(f"Listening in {server.getsockname()[0]}:{server.getsockname()[1]}")
@@ -61,11 +82,8 @@ def resolve_content_type(data_path):
 
 
 def resolve_path(data):
-    if os.path.isabs(data):
-        path = data
-    else:
-        path = os.path.abspath(data)
-    if os.path.exists(path) and os.path.isfile(path):
+    path = data[1:]
+    if os.path.isfile(path):
         return path
     return None
 
