@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(prog="Httpy", usage="%(prog)s [OPTIONS]")
 parser.add_argument("--host",default="localhost", help="determine the host of server. [default: localhost]")
 parser.add_argument("--p", "--port", default=8001, type=int , help="determine the porst of the server. [default: 8001]")
 parser.add_argument("-V", "--version", action="version", version="%(prog)s 0.1.0")
+parser.add_argument("--path", help="the path of directory for server to run. [default: current directory]")
 args = parser.parse_args()
 
 
@@ -23,6 +24,7 @@ args = parser.parse_args()
 
 host = args.host
 port = args.p
+path = args.path
 
 
 server = socket(AF_INET, SOCK_STREAM, -1)
@@ -88,7 +90,7 @@ def resolve_path(data):
     return None
 
 
-def get_file(socket: socket):
+def request(socket: socket):
     try:
         req = socket.recv(1024).decode().splitlines()
         data = req[0].split()
@@ -110,7 +112,7 @@ server.listen()
 while 1:
     try:
         (clientSocket, clientAddress) = server.accept()
-        res = get_file(clientSocket)
+        res = request(clientSocket)
         clientSocket.send(res)
         clientSocket.close()
     except OSError as e:
