@@ -6,6 +6,7 @@ import os
 from name import http_name
 import argparse
 from another import generate_directory_listing
+import urllib.parse
 
 
 class Httpy:
@@ -87,7 +88,7 @@ class Httpy:
         return header_str + content
 
     def resolve_path(self, data):
-        path = data[1]
+        path = urllib.parse.unquote(data[1])
         final_path = os.path.join(self.path, path.lstrip("/"))
 
         if os.path.isdir(final_path):
