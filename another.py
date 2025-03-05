@@ -1,8 +1,10 @@
 import os
+
+
 def generate_directory_listing(directory_path, req_path):
     try:
         files = os.listdir(directory_path)  # Get list of files and directories
-        files_html = "".join(f'<li><a href="{req_path.rstrip('/') + '/' + file}">{file}</a></li>' for file in files)  # Generate HTML links
+        files_html = "".join(f'<li><a href="{req_path.rstrip("/") + "/" + file}">{file}</a></li>' for file in files)
 
         html_content = f"""
         <!DOCTYPE html>
