@@ -7,13 +7,13 @@ from name import http_name
 import argparse
 from another import generate_directory_listing
 import urllib.parse
-
-
+from datetime import datetime
 class Httpy:
-    def __init__(self, host="localhost", port=8001, path=None):
+    def __init__(self, host="localhost", port=8001, path=None, debug=False):
         self.host = host
         self.port = port
         self.path = path or os.getcwd()
+        self.debug = debug
         self.server = socket(AF_INET, SOCK_STREAM, -1)
         self.server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.server.bind((self.host, self.port))
@@ -52,7 +52,7 @@ class Httpy:
                 client_socket.close()
                 return
 
-            content = self.resolve_path(request_line)
+            content, path = self.resolve_path(request_line)
             if content is None:
                 client_socket.send(
                     self.response("500 Internal File Variable!", "text/plain", 500)
@@ -61,6 +61,8 @@ class Httpy:
                 return
 
             client_socket.send(content)
+            if self.debug:
+                self.log(content, path)
 
         except Exception as e:
             print(e)
@@ -93,12 +95,20 @@ class Httpy:
 
         if os.path.isdir(final_path):
             list_dir = generate_directory_listing(final_path, path)
-            return self.response(list_dir, "text/html", 200)
+            return self.response(list_dir, "text/html", 200), path
 
         if os.path.isfile(final_path):
             with open(final_path, "rb") as file:
                 content = file.read()
-            return self.response(content, self.resolve_content_type(final_path), 200)
+            return self.response(content, self.resolve_content_type(final_path), 200), path
+
+    def log(self, content, path):
+        content_status = content.decode().splitlines()[0].split()
+        status = content_status[1]
+        status_text = content_status[2]
+
+        log_output = f"[{datetime.now()}] {status} {status_text} - {path}"
+        print(log_output)
 
     @staticmethod
     def get_status_text(status):
@@ -127,7 +137,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--path", help="Directory to serve files from [default: current directory]"
     )
+    parser.add_argument("--log", default=False, action='store_true' ,help="Show Log Levels [default: False]")
 
     args = parser.parse_args()
-    server = Httpy(host=args.host, port=args.p, path=args.path)
+    server = Httpy(host=args.host, port=args.p, path=args.path, debug=args.log)
     server.serve()
