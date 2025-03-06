@@ -9,6 +9,7 @@ Httpy is a simple and lightweight HTTP server written in Python. It serves stati
 ## **🚀 Features**  
 ✅ Minimalistic HTTP server using pure Python sockets  
 ✅ Supports **file serving** for HTML, CSS, JS, images, etc.  
+✅ Supports **Log Levels**.  
 ✅ **Directory listing** when accessing folders  
 ✅ Handles basic HTTP request parsing  
 ✅ Supports **custom host, port, and directory** via command-line arguments  
@@ -30,7 +31,7 @@ cd httpy
 ### **3️⃣ Run the Server**  
 Start the server with:  
 ```bash
-python httpy.py --host 0.0.0.0 --port 8080 --path /your/directory
+python httpy.py --host 0.0.0.0 --port 8080 --path /your/directory --log
 ```
 Or simply use the default settings:  
 ```bash
@@ -51,10 +52,11 @@ http://localhost:8001
 | `--host`   | The hostname or IP address to bind to        | `localhost`    |
 | `--port`   | The port number for the server               | `8001`         |
 | `--path`   | The directory to serve                       | `current dir`  |
+| `--log`    | Allow to show the log.                       | `False`  |
 
 Example usage:  
 ```bash
-python httpy.py --host 0.0.0.0 --port 9000 --path ~/public_html
+python httpy.py --host 0.0.0.0 --port 9000 --path ~/public_html --log
 ```
 
 ---
